@@ -11,6 +11,7 @@ from openai import OpenAI
 from playsound import playsound
 from dotenv import load_dotenv
 
+os.environ["PYTHONPATH"] = "/home/mingyu13/바탕화면/Help-my-exam"
 
 load_dotenv()
 
