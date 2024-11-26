@@ -8,20 +8,16 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.vectorstores import FAISS
 from langchain.schema import Document
-import tkinter as tk
-from tkinter import filedialog
 
 class DataSource:
     def __init__(self, openai_api_key):
         self.openai_key = openai_api_key
         self.selected_files = list()
-        self.tk = tk.Tk()
-        self.tk.withdraw()
 
 
 
     @staticmethod
-    def check_vectordb_exists(directory_path='fassis_vector_db'):
+    def check_vectordb_exists(directory_path='faiss_vector_db'):
         """
            Check if a directory exists.
 
@@ -34,17 +30,6 @@ class DataSource:
         return os.path.isdir(directory_path)
 
 
-    def select_files(self):
-        # 파일 선택 대화상자 열기 (여러 파일 선택 가능)
-        file_paths = filedialog.askopenfilenames(
-            title="이미지 파일 선택",
-            filetypes=[("이미지 파일", "*.png;*.jpg;*.jpeg;*.bmp;*.gif"), ("모든 파일", "*.*")]
-        )
-        # 선택된 파일 경로를 리스트에 저장
-        if file_paths:
-            self.selected_files.extend(file_paths)
-
-        return self.selected_files
 
 
 
@@ -54,7 +39,6 @@ class DataSource:
         for file_path in image_file_path_list:
             with open(file_path, "rb") as image_file:
                 img = Image.open(image_file)
-                img = img.resize((1000, 1000))
                 buffer = BytesIO()
                 img.save(buffer, format="PNG")
                 image_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
@@ -68,7 +52,7 @@ class DataSource:
         model = ChatOpenAI(model="gpt-4o", openai_api_key = self.openai_key, temperature=0.3)
         prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", "Avoid including introductory phrases such as 'This document is' or 'This is a document about. Please transform the following table data into a natural and consistent narrative format. Do not preserve the table structure, but instead, explain the meaning of each entry clearly in sentence form. Be sure to accurately express the relationships between the different entries, so that the search system can understand each concept correctly. Focus on turning the table’s structure into coherent and clear sentences without losing any of the information contained in the table. Avoid maintaining the table format, and instead, prioritize converting the information into a descriptive format. For example, for entries like 'person,' 'argument,' or 'model,' connect them naturally into a sentence and emphasize the key points. Ensure that the main concepts are well-explained and clearly articulated, to avoid confusion when searching for similar queries in the future. Answer in KOREAN."),
+                ("system", """Avoid including introductory phrases such as "This document is" or "This is a document about." Please transform the following table data into a natural and consistent narrative format. Do not preserve the table structure, but instead, explain the meaning of each entry clearly in sentence form. Be sure to accurately express the relationships between the different entries, so that the search system can understand each concept correctly. Focus on turning the table’s structure into coherent and clear sentences without losing any of the information contained in the table. For example, for entries like 'person,' 'argument,' or 'model,' connect them naturally into a sentence and emphasize the key points. Ensure that the main concepts are well-explained and clearly articulated, to avoid confusion when searching for similar queries in the future.Additionally, set the minimum chunk length to 300 characters. Ensure that each chunk maintains a coherent flow and avoids being too short. This will help preserve the context and improve the quality of downstream processing tasks. If the chunk exceeds the minimum length, keep it continuous without unnecessary splitting. Answer in KOREAN."""),
                 (
                     "user",
                     [
@@ -124,26 +108,26 @@ class DataSource:
 
         if self.check_vectordb_exists():
             vectorstore = FAISS.load_local(
-                'fassis_vector_db',
+                'faiss_vector_db',
                 embedding_model,
                 allow_dangerous_deserialization=True
             )
             for data in documents_list:
                 vectorstore.add_documents(data)
 
-            vectorstore.save_local('fassis_vector_db')
+            vectorstore.save_local('faiss_vector_db')
 
         else:
             vectorstore = FAISS.from_documents(documents_list[0], embedding_model)
             for data in documents_list[1:]:
                 vectorstore.add_documents(data)
 
-            vectorstore.save_local('fassis_vector_db')
+            vectorstore.save_local('faiss_vector_db')
 
     def similarity_search(self,query_text):
         embedding_model = OpenAIEmbeddings(model="text-embedding-ada-002", api_key=self.openai_key)
         vectorstore = FAISS.load_local(
-            'fassis_vector_db',
+            'faiss_vector_db',
             embedding_model,
             allow_dangerous_deserialization=True
         )
