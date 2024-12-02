@@ -10,13 +10,38 @@ from langchain.chat_models import ChatOpenAI
 from openai import OpenAI
 from playsound import playsound
 from dotenv import load_dotenv
+import time
+from streamlit_cookies_manager import EncryptedCookieManager
 
-os.environ["PYTHONPATH"] = "/home/mingyu13/바탕화면/Help-my-exam"
+'''
 
+Clean Code Refactoring
+
+리팩토링 시작
+DATE : 2024/12/2
+
+
+Author : 강민규
+'''
 load_dotenv()
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
 data_source = DataSource(openai_api_key)
+
+class HelpfulAssistiveFunction:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def start_study_time():
+        start_time = time.time()
+        return start_time
+
+    @staticmethod
+    def end_study_time():
+        end_time = time.time()
+        return end_time
+
 # JSON 파일 경로 설정
 JSON_FILE_PATH = "study_log.json"
 
@@ -28,7 +53,6 @@ st.set_page_config(
 )
 
 
-# CSS를 통해 버튼 스타일 변경
 st.markdown(
     """
     <style>
@@ -79,31 +103,6 @@ study_log = load_study_log()
 today_date = datetime.now().strftime("%Y-%m-%d")
 yesterday_notes = study_log.get(today_date, [])
 
-
-
-# 순공 시간 기능 :
-
-class HelpfulAssistiveFunction:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def start_study_time():
-        start_time = time.time()
-        return start_time
-
-    @staticmethod
-    def end_study_time():
-        end_time = time.time()
-        return end_time
-
-
-
-test1 = HelpfulAssistiveFunction()
-
-import time
-from streamlit_cookies_manager import EncryptedCookieManager
-import streamlit as st
 
 # 쿠키 관리자 설정
 cookies = EncryptedCookieManager(
@@ -164,7 +163,6 @@ with col3:
     if st.button("공부 내용 추가 및 업데이트"):
         if note:
             st.session_state.study_notes.append(note)
-            st.success(".")
             study_log[today_date] = yesterday_notes + st.session_state.study_notes
             save_study_log(study_log)
             st.success("공부 내용이 추가 및 저장되었습니다.")
@@ -354,8 +352,8 @@ with col7:
 
 # 피드백, 문의함 기능
 st.text("")
-st.write('''문제가 발생하거나 피드백이 있는 경우 아래의 이메일로 연락을 주세요! 저희는 항상 열려 있습니다!\n
-            Email: s23055@gsm.hs.kr 
-
+st.write('''
+문제가 발생하거나 피드백이 있는 경우 아래의 이메일로 연락을 주세요! 저희는 항상 열려 있습니다!\n
+            Email: s23055@gsm.hs.kr
 ''')
 

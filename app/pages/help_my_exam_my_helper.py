@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 
 
+
 load_dotenv()
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -133,64 +134,73 @@ def tts_function(input_text):
 
     # 오디오 재생
     playsound(speech_file_path)
-col1, col2 = st.columns([1,5])
+
+    # 세션 상태 초기화
+if "tts_check" not in st.session_state:
+    st.session_state.tts_check = False
+
+if "ai_response" not in st.session_state:
+    st.session_state.ai_response = ""  # 초기값 설정
+
+
+
+col1, col2 = st.columns([1,0.1])
 
 with col1:
-    # 버튼 생성 및 동작
     if st.button("말하기"):
-        # with sr.Microphone() as source:
-        #     print("듣고 있습니다!")
-        #     audio = recognizer.listen(source)
+        with sr.Microphone() as source:
+            print("듣고 있습니다!")
+            audio = recognizer.listen(source)
 
             try:
-                # print("인식된 텍스트: " + recognizer.recognize_google(audio, language='ko-KR'))
-                # user_input = recognizer.recognize_google(audio, language='ko-KR')
-                user_input = "갑신정변이 뭐야?"
-
-
-
-                if user_input:
-                    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    # 사용자 메시지 저장 및 표시
-                    st.session_state.messages.append({"role": "user", "content": user_input})
-                    with st.chat_message("user"):
-                        st.write(user_input)
-
-                    # 검색 결과 가져오기
-                    with st.spinner("Searching for relevant information..."):
-                        retrieved_docs = data_source.similarity_search(user_input)
-                        retrieved_texts = "\n".join(doc.page_content for doc in retrieved_docs)
-                        print(retrieved_texts)
-
-                    # 검색된 내용을 사이드바에 표시
-                    with st.sidebar:
-                        st.header("🔍 검색된 정보")
-                        st.write(retrieved_texts)
-
-                    # 모델 응답 생성
-                    with st.chat_message("assistant"):
-                        with st.spinner("Generating response..."):
-                            ai_response = llm_chain.predict(
-                                question=user_input,
-                                retrieved_docs=retrieved_texts
-                            )
-                            st.write(ai_response)
-
-                    # 응답 저장
-                    st.session_state.messages.append({"role": "assistant", "content": ai_response})
-
-                    conversation_data = {
-                        "date": current_time,
-                        "user_input": user_input,
-                        "response": ai_response
-                    }
-                    save_to_json(conversation_data)
-
+                print("인식된 텍스트: " + recognizer.recognize_google(audio, language='ko-KR'))
+                user_input = recognizer.recognize_google(audio, language='ko-KR')
 
             except sr.UnknownValueError:
                 print("Google Web Speech API가 당신의 말을 이해하지 못했습니다.")
             except sr.RequestError as e:
                 print(f"Google Web Speech API 서비스에 문제가 발생했습니다; {e}")
+
+
+
+            if user_input:
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # 사용자 메시지 저장 및 표시
+                st.session_state.messages.append({"role": "user", "content": user_input})
+                with st.chat_message("user"):
+                    st.write(user_input)
+
+                # 검색 결과 가져오기
+                with st.spinner("Searching for relevant information..."):
+                    retrieved_docs = data_source.similarity_search(user_input)
+                    retrieved_texts = "\n".join(doc.page_content for doc in retrieved_docs)
+                    print(retrieved_texts)
+
+                # 검색된 내용을 사이드바에 표시
+                with st.sidebar:
+                    st.header("🔍 검색된 정보")
+                    st.write(retrieved_texts)
+
+                # 모델 응답 생성
+                with st.chat_message("assistant"):
+                    with st.spinner("Generating response..."):
+                        ai_response = llm_chain.predict(
+                            question=user_input,
+                            retrieved_docs=retrieved_texts
+                        )
+                        st.write(ai_response)
+
+                # 응답 저장
+                st.session_state.messages.append({"role": "assistant", "content": ai_response})
+
+                conversation_data = {
+                    "date": current_time,
+                    "user_input": user_input,
+                    "response": ai_response
+                }
+
+                st.session_state.ai_response = ai_response
+                save_to_json(conversation_data)
 
 
 # 사용자 입력 받기
@@ -223,8 +233,6 @@ if user_input:
                 )
             st.write(ai_response)
 
-            if st.session_state.tts_check:
-                tts_function(ai_response)
 
         # 응답 저장
     st.session_state.messages.append({"role": "assistant", "content": ai_response})
@@ -234,17 +242,12 @@ if user_input:
         "user_input": user_input,
         "response": ai_response
     }
+
+    st.session_state.ai_response = ai_response
     save_to_json(conversation_data)
 
-
 with col2:
-    # 세션 상태 초기화
-    if "tts_check" not in st.session_state:
-        st.session_state.tts_check = False
-
     if st.button("듣기"):
         # 현재 상태를 반대로 전환
-        st.session_state.tts_check = not st.session_state.tts_check
-        st.write(st.session_state.tts_check)
-
+        tts_function(st.session_state.ai_response)
 
