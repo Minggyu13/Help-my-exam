@@ -4,14 +4,25 @@ from PIL import Image
 from io import BytesIO
 from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langchain.vectorstores import FAISS
 from langchain.schema import Document
+import json
+
+"""
+About DATA Process Code
+
+Args:
+    openai_api_key : openai api key
+    model : openai model name , example : gpt4o
+    study_log_json_path : Path of study log json file
+
+"""
 
 class DataSource:
-    def __init__(self, openai_api_key):
+    def __init__(self, openai_api_key, study_log_json_path, chat_and_history_json_path):
         self.openai_key = openai_api_key
+        self.study_log_json = study_log_json_path
+        self.chat_and_history_json = chat_and_history_json_path
         self.selected_files = list()
 
 
@@ -47,33 +58,6 @@ class DataSource:
 
         return encoded_image_list
 
-
-    def chatgpt_4o_prompt_template_and_invoke(self, encoded_image_list):
-        model = ChatOpenAI(model="gpt-4o", openai_api_key = self.openai_key, temperature=0.3)
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", """Avoid including introductory phrases such as "This document is" or "This is a document about." Please transform the following table data into a natural and consistent narrative format. Do not preserve the table structure, but instead, explain the meaning of each entry clearly in sentence form. Be sure to accurately express the relationships between the different entries, so that the search system can understand each concept correctly. Focus on turning the table’s structure into coherent and clear sentences without losing any of the information contained in the table. For example, for entries like 'person,' 'argument,' or 'model,' connect them naturally into a sentence and emphasize the key points. Ensure that the main concepts are well-explained and clearly articulated, to avoid confusion when searching for similar queries in the future.Additionally, set the minimum chunk length to 300 characters. Ensure that each chunk maintains a coherent flow and avoids being too short. This will help preserve the context and improve the quality of downstream processing tasks. If the chunk exceeds the minimum length, keep it continuous without unnecessary splitting. Answer in KOREAN."""),
-                (
-                    "user",
-                    [
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": "data:image/jpeg;base64,{image_data}"},
-                        }
-                    ],
-                ),
-            ]
-        )
-
-
-        chain = prompt | model
-        response_list = list()  # Gpt 4o ocr 후 이미지 글자 처리 데이터 리스트 저장
-
-        for encoded_image in encoded_image_list:
-            response = chain.invoke({"image_data": encoded_image})
-            response_list.append(response.content)
-
-        return response_list
 
 
     @staticmethod
@@ -132,7 +116,59 @@ class DataSource:
             allow_dangerous_deserialization=True
         )
 
-        searched_texts = vectorstore.similarity_search(query_text, k=2)
+        searched_texts = vectorstore.similarity_search(query_text, k=3)
 
 
         return searched_texts
+
+
+    @staticmethod
+    def load_json_file(path):
+        try:
+            with open(path, "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            return {}
+
+
+    def save_study_log(self, data):
+        with open(self.study_log_json, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+
+
+    @staticmethod
+    def upload_saved_image(directory_path, uploaded_files):
+        save_folder = directory_path
+        os.makedirs(save_folder, exist_ok=True)
+
+        file_paths = []
+
+        for uploaded_file in uploaded_files:
+            # 파일 저장 경로 (절대 경로 포함)
+            save_path = os.path.join(os.getcwd(), save_folder, uploaded_file.name)  # 현재 작업 디렉토리 + uploads 폴더
+
+            # 파일을 로컬에 저장
+            with open(save_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            # 저장된 파일 경로를 리스트에 추가
+            file_paths.append(save_path)
+
+        return file_paths
+
+    def save_chat_history(self,conversation_data):
+
+        try:
+            with open(self.chat_and_history_json, 'r', encoding="utf-8") as file:
+                conversation_history = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            conversation_history = []
+
+        # 새로운 대화 추가
+        conversation_history.append(conversation_data)
+
+        with open(self.chat_and_history_json, 'w', encoding="utf-8") as file:
+            json.dump(conversation_history, file, ensure_ascii=False, indent=4)
+
+
+
