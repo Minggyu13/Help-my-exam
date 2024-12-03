@@ -18,9 +18,10 @@ COPY . /app
 
 # PYTHONPATH 환경 변수 설정
 ENV PYTHONPATH=/app
-
+ENV OPENAI_API_KEY="input a invididual key"
 # Python 의존성 설치
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Streamlit 애플리케이션 실행
 CMD ["streamlit", "run", "app/app/help_my_exam_main.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
