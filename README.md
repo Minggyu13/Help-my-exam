@@ -3,6 +3,5 @@
 
 
 ## How to run?
-export PYTHONPATH="/home/mingyu13/바탕화면/Help-my-exam"
-
-streamlit run app/help_my_exam_main.py
+docker build -t help_my_exam:latest .
+docker run help_my_exam
