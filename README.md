@@ -3,5 +3,5 @@
 
 
 ## How to run?
-docker build -t help_my_exam:latest .
-docker run help_my_exam
+### docker build -t help_my_exam:latest . 
+### docker run help_my_exam
