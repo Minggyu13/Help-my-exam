@@ -23,5 +23,5 @@ ENV OPENAI_API_KEY="input a invididual key"
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Streamlit 애플리케이션 실행
-CMD ["streamlit", "run", "app/app/help_my_exam_main.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app/app/help_my_exam_main.py"]
 
