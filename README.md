@@ -4,5 +4,5 @@
 
 ## How to run?
 ### docker build -t help_my_exam:latest . 
-### docker run -p 8000:8000
+### docker run help_my_exam
 
