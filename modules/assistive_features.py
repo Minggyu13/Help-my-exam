@@ -1,13 +1,14 @@
 from openai import OpenAI
 from playsound import playsound
 import speech_recognition as sr
-
+import pygame
 
 
 class AssistiveFeatures:
     def __init__(self, openai_api_key):
         self.openai_api_key = openai_api_key
         self.recognizer = sr.Recognizer()
+        pygame.mixer.init()
 
     def tts_service(self, input_text):
         client = OpenAI(
@@ -26,7 +27,8 @@ class AssistiveFeatures:
         )
 
         response.stream_to_file(speech_file_path)
-        playsound(speech_file_path)
+        pygame.mixer.music.load(speech_file_path)
+        pygame.mixer.music.play()
 
     def stt_service(self):
         with sr.Microphone() as source:

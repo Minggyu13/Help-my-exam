@@ -4,14 +4,14 @@ from modules.datasource import DataSource
 import os
 from llm.custom_llm import CustomLLMService
 from modules.assistive_features import AssistiveFeatures
-
+from dotenv import load_dotenv
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
 data_source = DataSource(openai_api_key,study_log_json_path="data/study_log.json", chat_and_history_json_path="data/chat_and_history.json")
 assistive_features = AssistiveFeatures(openai_api_key=openai_api_key)
 custom_llm_service = CustomLLMService(openai_api_key= openai_api_key, model="gpt-4o")
 study_log = data_source.load_json_file(data_source.study_log_json)
-
+load_dotenv()
 
 
 
