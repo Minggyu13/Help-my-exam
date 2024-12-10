@@ -115,4 +115,3 @@ urllib3==2.2.3
 watchdog==6.0.0
 wcwidth==0.2.13
 yarl==1.17.1
-pygame==2.6.1
