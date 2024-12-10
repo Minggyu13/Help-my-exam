@@ -26,9 +26,9 @@ class AssistiveFeatures:
             speed=1.1,
         )
 
+
         response.stream_to_file(speech_file_path)
-        pygame.mixer.music.load(speech_file_path)
-        pygame.mixer.music.play()
+        playsound(speech_file_path)
 
     def stt_service(self):
         with sr.Microphone() as source:
