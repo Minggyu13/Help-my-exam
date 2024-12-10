@@ -10,5 +10,6 @@
 
 ## If you want to run it on your local computer
 
-### export PYTHONPATH="your_path/Help-my-exam"
-### streamlit run app/help_my_exam_main.py
+### 1. sudo apt update && sudo apt install portaudio19-dev
+### 2. export PYTHONPATH="your_path/Help-my-exam"
+### 3. streamlit run app/help_my_exam_main.py
